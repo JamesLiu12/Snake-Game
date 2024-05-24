@@ -276,10 +276,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   snakeHead: {fileID: 932000968}
-  upBound: 40.5
-  lowBound: 6.5
-  leftBound: 15
-  rightBound: 35
+  upBound: 40
+  lowBound: 10
+  leftBound: 18
+  rightBound: 32
 --- !u!1 &913492111
 GameObject:
   m_ObjectHideFlags: 0
@@ -2566,7 +2566,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.9, y: 0.9}
+  m_Size: {x: 0.8, y: 0.8}
   m_EdgeRadius: 0
 --- !u!50 &932000971
 Rigidbody2D:

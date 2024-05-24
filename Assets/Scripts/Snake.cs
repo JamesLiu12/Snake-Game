@@ -1,17 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public class Snake : MonoBehaviour
 {
-    private record TurnPosAndDir(Vector2 pos, Vector2 dir)
-    {
-        public static readonly TurnPosAndDir zero = new TurnPosAndDir(Vector2.zero, Vector2.zero);
-        
-        public Vector2 pos { get; set; } = pos;
-        public Vector2 dir { get; set; } = dir;
-    }
+    // private record TurnPosAndDir(Vector2 pos, Vector2 dir)
+    // {
+    //     public static readonly TurnPosAndDir zero = new TurnPosAndDir(Vector2.zero, Vector2.zero);
+    //     
+    //     public Vector2 pos { get; set; } = pos;
+    //     public Vector2 dir { get; set; } = dir;
+    // }
     
     [SerializeField] private GameObject snakeBody;
     
@@ -19,16 +20,16 @@ public class Snake : MonoBehaviour
 
     [SerializeField] private float moveSpeed = 5;
 
+    private Vector2 destination;
+
+    private Vector2 nextDirection;
+
     private bool m_ChangeReceived;
 
     private readonly List<Transform> m_BodyList = new();
 
-    private readonly List<Vector2> m_BodyDirectionList = new();
-    
-    private TurnPosAndDir m_HeadNextTurn = TurnPosAndDir.zero;
+    private readonly List<Vector2> m_BodyDestinationList = new();
 
-    private readonly List<List<TurnPosAndDir>> m_BodyTurnList = new();
-    
     void Start()
     {
         var headTransform = transform;
@@ -41,14 +42,13 @@ public class Snake : MonoBehaviour
         m_BodyList.Add(Instantiate(snakeBody, bodyPosition1, Quaternion.identity).transform);
         m_BodyList.Add(Instantiate(snakeBody, bodyPosition2, Quaternion.identity).transform);
         m_BodyList.Add(Instantiate(snakeBody, bodyPosition3, Quaternion.identity).transform);
+
+        destination = transform.position + new Vector3(moveDirection.x, moveDirection.y);
+        nextDirection = moveDirection;
         
-        m_BodyDirectionList.Add(Vector2.up);
-        m_BodyDirectionList.Add(Vector2.up);
-        m_BodyDirectionList.Add(Vector2.up);
-        
-        m_BodyTurnList.Add(new());
-        m_BodyTurnList.Add(new());
-        m_BodyTurnList.Add(new());
+        m_BodyDestinationList.Add(bodyPosition1 + Vector3.up);
+        m_BodyDestinationList.Add(bodyPosition2 + Vector3.up);
+        m_BodyDestinationList.Add(bodyPosition3 + Vector3.up);
     }
     
     void Update()
@@ -56,120 +56,82 @@ public class Snake : MonoBehaviour
         GetInput();
 
         float offset = moveSpeed * Time.deltaTime;
-
-        UpdateHead(offset);
         
-        UpdateBodies(offset);
+        UpdateSnake(offset);
+    }
+
+    private void UpdateSnake(float offset)
+    {
+        float firstOffset = 0;
+        
+        if (moveDirection.x < 0 && transform.position.x >= destination.x
+                                && transform.position.x - offset <= destination.x ||
+            moveDirection.x > 0 && transform.position.x <= destination.x
+                                && transform.position.x + offset >= destination.x ||
+            moveDirection.y < 0 && transform.position.y >= destination.y
+                                && transform.position.y - offset <= destination.y ||
+            moveDirection.y > 0 && transform.position.y <= destination.y
+                                && transform.position.y + offset >= destination.y)
+        {
+            if (nextDirection.x < 0)
+            {
+                transform.rotation = Quaternion.Euler(0, 0, 90);
+                firstOffset = transform.position.x - destination.x;
+            }
+            else if (nextDirection.x > 0)
+            {
+                transform.rotation = Quaternion.Euler(0, 0, -90);
+                firstOffset = destination.x - transform.position.x;
+            }
+            else if (nextDirection.y < 0)
+            {
+                transform.rotation = Quaternion.Euler(0, 0, -180);
+                firstOffset = transform.position.y - destination.y;
+            }
+            else if (nextDirection.y > 0)
+            {
+                transform.rotation = Quaternion.Euler(0, 0, 0);
+                firstOffset = destination.y - transform.position.y;
+            }
+            
+            UpdateHead(firstOffset);
+            UpdateBodies(firstOffset);
+            UpdateDirections();
+            m_ChangeReceived = false;
+        }
+        UpdateHead(offset - firstOffset);
+        UpdateBodies(offset - firstOffset);
     }
 
     private void UpdateHead(float offset)
     {
-        float firstOffset = 0;
-        
-        if (!m_HeadNextTurn.Equals(TurnPosAndDir.zero))
-        {
-            var pos = m_HeadNextTurn.pos;
-            var dir = m_HeadNextTurn.dir;
-
-            if (moveDirection.x < 0 && transform.position.x >= pos.x
-                                    && transform.position.x - offset <= pos.x ||
-                moveDirection.x > 0 && transform.position.x <= pos.x
-                                    && transform.position.x + offset >= pos.x ||
-                moveDirection.y < 0 && transform.position.y >= pos.y
-                                    && transform.position.y - offset <= pos.y ||
-                moveDirection.y > 0 && transform.position.y <= pos.y
-                                    && transform.position.y + offset >= pos.y)
-            {
-                if (dir.x < 0)
-                {
-                    transform.rotation = Quaternion.Euler(0, 0, 90);
-                    firstOffset = transform.position.x - pos.x;
-                }
-                else if (dir.x > 0)
-                {
-                    transform.rotation = Quaternion.Euler(0, 0, -90);
-                    firstOffset = pos.x - transform.position.x;
-                }
-                else if (dir.y < 0)
-                {
-                    transform.rotation = Quaternion.Euler(0, 0, -180);
-                    firstOffset = transform.position.y - pos.y;
-                }
-                else if (dir.y > 0)
-                {
-                    transform.rotation = Quaternion.Euler(0, 0, 0);
-                    firstOffset = pos.y - transform.position.y;
-                }
-
-                Vector2 firstMoveOffset = moveDirection * firstOffset;
-                transform.position += new Vector3(firstMoveOffset.x, firstMoveOffset.y);
-
-                moveDirection = dir;
-                m_ChangeReceived = false;
-                
-                m_HeadNextTurn = TurnPosAndDir.zero;
-
-                Debug.Log("Head Enter");
-            }
-        }
-
-        Vector2 moveOffset = moveDirection * (offset - firstOffset);
+        Vector2 moveOffset = moveDirection * offset;
         transform.position += new Vector3(moveOffset.x, moveOffset.y);
     }
-    
+
     private void UpdateBodies(float offset)
     {
         for (int i = 0; i < m_BodyList.Count; i++)
         {
             var body = m_BodyList[i];
-            var bodyDirection = m_BodyDirectionList[i];
-            int deleteCount = 0;
-            float firstOffset = 0;
+            var bodyDestination = m_BodyDestinationList[i];
 
-            if (m_BodyTurnList[i].Count > 0)
-            {
-
-                var pos = m_BodyTurnList[i][0].pos;
-                var dir = m_BodyTurnList[i][0].dir;
-
-                if (bodyDirection.x < 0 && body.position.x >= pos.x
-                                        && body.position.x - offset <= pos.x ||
-                    bodyDirection.x > 0 && body.position.x <= pos.x
-                                        && body.position.x + offset >= pos.x ||
-                    bodyDirection.y < 0 && body.position.y >= pos.y
-                                        && body.position.y - offset <= pos.y ||
-                    bodyDirection.y > 0 && body.position.y <= pos.y
-                                        && body.position.y + offset >= pos.y)
-                {
-                    if (bodyDirection.x < 0)
-                    {
-                        firstOffset = body.position.x - pos.x;
-                    }
-                    else if (bodyDirection.x > 0)
-                    {
-                        firstOffset = pos.x - body.position.x;
-                    }
-                    else if (bodyDirection.y < 0)
-                    {
-                        firstOffset = body.position.y - pos.y;
-                    }
-                    else if (bodyDirection.y > 0)
-                    {
-                        firstOffset = pos.y - body.position.y;
-                    }
-
-                    Vector2 firstMoveOffset = bodyDirection * firstOffset;
-                    body.transform.position += new Vector3(firstMoveOffset.x, firstMoveOffset.y);
-
-                    m_BodyDirectionList[i] = dir;
-
-                    m_BodyTurnList[i].RemoveAt(0);
-                }
-            }
-
-            Vector2 moveOffset = bodyDirection * (offset - firstOffset);
-            body.transform.position += new Vector3(moveOffset.x, moveOffset.y);
+            Vector2 moveOffset = GetDirection(body.position, bodyDestination) * offset;
+            body.position += new Vector3(moveOffset.x, moveOffset.y);
         }
+    }
+
+    private void UpdateDirections()
+    {
+        for (int i = m_BodyList.Count - 1; i >= 1; i--)
+        {
+            m_BodyDestinationList[i] = m_BodyDestinationList[i - 1];
+        }
+
+        m_BodyDestinationList[0] = destination;
+        
+        destination += nextDirection;
+        moveDirection = nextDirection;
     }
 
     private void GetInput()
@@ -194,14 +156,16 @@ public class Snake : MonoBehaviour
                 else if (moveDirection.y < 0) turnPos = new Vector2(headPosition.x, FindLastPoint5(headPosition.y));
                 else if (moveDirection.y > 0) turnPos = new Vector2(headPosition.x, FindNextPoint5(headPosition.y));
 
-                TurnPosAndDir turn = new(turnPos, newDirection);
+                nextDirection = newDirection;
                 
+                // TurnPosAndDir turn = new(turnPos, newDirection);
+
                 // m_TurnList.Add(turn);
-                m_HeadNextTurn = turn;
+                // m_HeadNextTurn = turn;
                 
-                for (int i = 0; i < m_BodyTurnList.Count; i++) m_BodyTurnList[i].Add(turn);
+                // for (int i = 0; i < m_BodyTurnList.Count; i++) m_BodyTurnList[i].Add(turn);
                 
-                Debug.Log("Add turn:" + m_HeadNextTurn);
+                // Debug.Log("Add turn:" + m_HeadNextTurn);
             }
         }
     }
@@ -216,6 +180,11 @@ public class Snake : MonoBehaviour
     {
         var fracPart = val - (float)Math.Truncate(val);
         return fracPart >= 0.5 ? Mathf.Ceil(val) - 0.5f : Mathf.Floor(val) - 0.5f;
+    }
+
+    private Vector2 GetDirection(Vector2 from, Vector2 to)
+    {
+        return (to - from).normalized;
     }
 
     private void OnTriggerEnter2D(Collider2D col)
@@ -233,14 +202,11 @@ public class Snake : MonoBehaviour
 
     private void Grow()
     {
-        Vector3 spawnPosition = m_BodyList[^1].transform.position -
-                                new Vector3(m_BodyDirectionList[^1].x, m_BodyDirectionList[^1].y);
+        Vector3 tailDirection = GetDirection(m_BodyList[^1].position, m_BodyDestinationList[^1]);
+        Vector3 spawnPosition = m_BodyList[^1].transform.position - tailDirection;
         GameObject newBody = Instantiate(snakeBody, spawnPosition, Quaternion.identity);
         m_BodyList.Add(newBody.transform);
-        m_BodyDirectionList.Add(new(m_BodyDirectionList[^1].x, m_BodyDirectionList[^1].y));
-        List<TurnPosAndDir> turnList = new();
-        foreach (var item in m_BodyTurnList[^1]) turnList.Add(item);
-        m_BodyTurnList.Add(turnList);
+        m_BodyDestinationList.Add(m_BodyDestinationList[^1] - (Vector2)tailDirection);
     }
 
     private void Die()
