@@ -1,59 +1,59 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class GameDataHandler : MonoBehaviour
 {
-    private const string k_EatEventUrl = "http://localhost/saveEatEvent.php";
-    private const string k_GameOverUrl = "http://localhost/saveGameOver.php";
-    
+    public InputField playerNameInput;
+    public Snake snakeScript;
     void Start()
     {
-        if (!PlayerPrefs.HasKey("PlayerID"))
+        
+    }
+
+    void UploadData()
+    {
+        string playerName = playerNameInput.text;
+
+        List<Dictionary<string, string>> foodTimes = new();
+        foreach (var foodTime in snakeScript.foodTimeList)
         {
-            string uniqueId = System.Guid.NewGuid().ToString();
-            PlayerPrefs.SetString("PlayerID", uniqueId);
-            PlayerPrefs.Save();
+            Dictionary<string, string> entry = new Dictionary<string, string>
+            {
+                { "foodName", foodTime.Item1 },
+                { "takeTime", foodTime.Item2.ToString() }
+            };
+            foodTimes.Add(entry);
         }
+
+        string foodTimesJson = JsonUtility.ToJson(new SerializationWrapper(foodTimes));
+
+        StartCoroutine(PostData(playerName, foodTimesJson));
     }
 
-    public void SendEatEvent(string foodName)
-    {
-        string playerId = PlayerPrefs.GetString("PlayerID");
-        StartCoroutine(PostEatEvent(playerId, foodName));
-    }
-
-    private IEnumerator PostEatEvent(string playerId, string foodName)
+    IEnumerator PostData(string playerName, string foodTimesJson)
     {
         WWWForm form = new WWWForm();
-        form.AddField("playerId", playerId);
-        form.AddField("foodName", foodName);
-        form.AddField("eatTime", System.DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
-
-        using UnityWebRequest www = UnityWebRequest.Post(k_EatEventUrl, form);
-        yield return www.SendWebRequest();
-
-        Debug.Log(www.result != UnityWebRequest.Result.Success ? www.error : "Eat event uploaded successfully!");
-    }
-
-    public void SendGameOverEvent(string playerName, int score)
-    {
-        string playerId = PlayerPrefs.GetString("PlayerID");
-        StartCoroutine(PostGameOverEvent(playerId, playerName, score));
-    }
-
-    private IEnumerator PostGameOverEvent(string playerId, string playerName, int score)
-    {
-        WWWForm form = new WWWForm();
-        form.AddField("playerId", playerId);
         form.AddField("playerName", playerName);
-        form.AddField("score", score);
-        form.AddField("gameOverTime", System.DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+        form.AddField("foodTimes", foodTimesJson);
 
-        using UnityWebRequest www = UnityWebRequest.Post(k_GameOverUrl, form);
+        using UnityWebRequest www = UnityWebRequest.Post("http://localhost/uploadData.php", form);
         yield return www.SendWebRequest();
 
-        Debug.Log(www.result != UnityWebRequest.Result.Success ? www.error : "Game over event uploaded successfully!");
+        Debug.Log(www.result != UnityWebRequest.Result.Success ? www.error : www.downloadHandler.text);
+    }
+
+    [Serializable]
+    private class SerializationWrapper
+    {
+        public List<Dictionary<string, string>> items;
+
+        public SerializationWrapper(List<Dictionary<string, string>> items)
+        {
+            this.items = items;
+        }
     }
 }

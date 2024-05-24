@@ -33,6 +33,10 @@ public class Snake : MonoBehaviour
 
     [SerializeField] private FoodSpawner foodSpawnerScript;
 
+    private float m_Timer;
+
+    public readonly List<Tuple<string, TimeSpan>> foodTimeList = new();
+
     public void StartGame()
     {
         m_GameStarted = true;
@@ -51,6 +55,8 @@ public class Snake : MonoBehaviour
         InitializeBodies();
         startHint.SetActive(false);
         foodSpawnerScript.Initialize();
+        m_Timer = 0;
+        foodTimeList.Clear();
     }
 
     private void ClearBodies()
@@ -104,6 +110,8 @@ public class Snake : MonoBehaviour
         }
         
         if (m_MoveDirection.Equals(Vector2.zero)) return;
+
+        m_Timer += Time.deltaTime;
 
         GetInput();
 
@@ -232,10 +240,13 @@ public class Snake : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.CompareTag("Food"))
+        if (col.CompareTag("Apple") || col.CompareTag("Banana") || col.CompareTag("Grape") || col.CompareTag("Mango")) 
         {
             Destroy(col.gameObject);
             Grow();
+            foodTimeList.Add(new(col.CompareTag("Apple") ? "Apple" :
+                col.CompareTag("Banana") ? "Banana" :
+                col.CompareTag("Grape") ? "Grape" : "Mango", TimeSpan.FromSeconds(m_Timer)));
         }
         else if (col.CompareTag("Obstacle") || (col.CompareTag("SnakeBody") && col.gameObject != m_BodyList[0].gameObject))
         {

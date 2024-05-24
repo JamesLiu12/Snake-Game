@@ -17,6 +17,10 @@ public class MenuManager : MonoBehaviour
 
     [SerializeField] private Snake snakeScript;
 
+    [SerializeField] private GameObject uploadButton;
+
+    [SerializeField] private GameObject successfulText;
+
     private MenuStatus m_CurrentStatus = MenuStatus.MainMenu;
     
     void Start()
@@ -47,6 +51,8 @@ public class MenuManager : MonoBehaviour
         mainMenu.SetActive(false);
         snakeScript.StartGame();
         m_CurrentStatus = MenuStatus.InPlay;
+        uploadButton.SetActive(true);
+        successfulText.SetActive(false);
     }
 
     public void ShowRanking()
@@ -98,5 +104,11 @@ public class MenuManager : MonoBehaviour
     {
         mainMenu.SetActive(true);
         m_CurrentStatus = MenuStatus.MainMenu;
+    }
+
+    public void UploadScore()
+    {
+        uploadButton.SetActive(false);
+        successfulText.SetActive(true);
     }
 }

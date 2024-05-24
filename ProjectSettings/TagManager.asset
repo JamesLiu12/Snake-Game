@@ -9,6 +9,10 @@ TagManager:
   - Obstacle
   - SnakeHead
   - SnakeBody
+  - Apple
+  - Banana
+  - Grape
+  - Mango
   layers:
   - Default
   - TransparentFX
