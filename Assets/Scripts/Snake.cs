@@ -2,21 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using TMPro;
 using UnityEngine;
 
 public class Snake : MonoBehaviour
 {
-    // private record TurnPosAndDir(Vector2 pos, Vector2 dir)
-    // {
-    //     public static readonly TurnPosAndDir zero = new TurnPosAndDir(Vector2.zero, Vector2.zero);
-    //     
-    //     public Vector2 pos { get; set; } = pos;
-    //     public Vector2 dir { get; set; } = dir;
-    // }
-    
     [SerializeField] private GameObject snakeBody;
     
-    [SerializeField] private Vector2 moveDirection = new(0, 1);
+    private Vector2 m_MoveDirection = Vector2.zero;
 
     [SerializeField] private float moveSpeed = 5;
 
@@ -29,12 +22,48 @@ public class Snake : MonoBehaviour
     private readonly List<Transform> m_BodyList = new();
 
     private readonly List<Vector2> m_BodyDestinationList = new();
+    
+    private bool m_GameStarted;
 
-    void Start()
+    [SerializeField] private GameObject startHint;
+
+    [SerializeField] private TMP_Text scoreTMP;
+
+    [SerializeField] private GameObject dieMenu;
+
+    [SerializeField] private FoodSpawner foodSpawnerScript;
+
+    public void StartGame()
+    {
+        m_GameStarted = true;
+        startHint.SetActive(true);
+        foodSpawnerScript.StartGame();
+    }
+
+    public void InitializeGame()
+    {
+        m_MoveDirection = Vector2.zero;
+        transform.position = new Vector3(25.5f, 25.5f, 0);
+        transform.rotation = Quaternion.Euler(0, 0, 0);
+        destination = transform.position + new Vector3(m_MoveDirection.x, m_MoveDirection.y);
+        m_ChangeReceived = false;
+        ClearBodies();
+        InitializeBodies();
+        startHint.SetActive(false);
+        foodSpawnerScript.Initialize();
+    }
+
+    private void ClearBodies()
+    {
+        foreach (var item in m_BodyList) Destroy(item.gameObject);
+        m_BodyList.Clear();
+        m_BodyDestinationList.Clear();
+    }
+
+    private void InitializeBodies()
     {
         var headTransform = transform;
         var headPosition = headTransform.position;
-        
         Vector3 bodyPosition1 = new Vector3(headPosition.x, headPosition.y - 1);
         Vector3 bodyPosition2 = new Vector3(headPosition.x, headPosition.y - 2);
         Vector3 bodyPosition3 = new Vector3(headPosition.x, headPosition.y - 3);
@@ -42,17 +71,40 @@ public class Snake : MonoBehaviour
         m_BodyList.Add(Instantiate(snakeBody, bodyPosition1, Quaternion.identity).transform);
         m_BodyList.Add(Instantiate(snakeBody, bodyPosition2, Quaternion.identity).transform);
         m_BodyList.Add(Instantiate(snakeBody, bodyPosition3, Quaternion.identity).transform);
-
-        destination = transform.position + new Vector3(moveDirection.x, moveDirection.y);
-        nextDirection = moveDirection;
-        
-        m_BodyDestinationList.Add(bodyPosition1 + Vector3.up);
-        m_BodyDestinationList.Add(bodyPosition2 + Vector3.up);
-        m_BodyDestinationList.Add(bodyPosition3 + Vector3.up);
     }
+
+    private void SetInitialDirection()
+    {
+        m_MoveDirection = Vector2.up;
+        nextDirection = Vector2.up;
+        
+        m_BodyDestinationList.Add(m_BodyList[0].position + Vector3.up);
+        m_BodyDestinationList.Add(m_BodyList[1].position + Vector3.up);
+        m_BodyDestinationList.Add(m_BodyList[2].position + Vector3.up);
+    }
+
+    void Start()
+    {
+        InitializeGame();
+    }
+    
     
     void Update()
     {
+        if (!m_GameStarted) return;
+
+        if (m_MoveDirection.Equals(Vector2.zero))
+        {
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) ||
+                Input.GetKeyDown(KeyCode.D))
+            {
+                SetInitialDirection();
+                startHint.SetActive(false);
+            }
+        }
+        
+        if (m_MoveDirection.Equals(Vector2.zero)) return;
+
         GetInput();
 
         float offset = moveSpeed * Time.deltaTime;
@@ -64,13 +116,13 @@ public class Snake : MonoBehaviour
     {
         float firstOffset = 0;
         
-        if (moveDirection.x < 0 && transform.position.x >= destination.x
+        if (m_MoveDirection.x < 0 && transform.position.x >= destination.x
                                 && transform.position.x - offset <= destination.x ||
-            moveDirection.x > 0 && transform.position.x <= destination.x
+            m_MoveDirection.x > 0 && transform.position.x <= destination.x
                                 && transform.position.x + offset >= destination.x ||
-            moveDirection.y < 0 && transform.position.y >= destination.y
+            m_MoveDirection.y < 0 && transform.position.y >= destination.y
                                 && transform.position.y - offset <= destination.y ||
-            moveDirection.y > 0 && transform.position.y <= destination.y
+            m_MoveDirection.y > 0 && transform.position.y <= destination.y
                                 && transform.position.y + offset >= destination.y)
         {
             if (nextDirection.x < 0)
@@ -105,7 +157,7 @@ public class Snake : MonoBehaviour
 
     private void UpdateHead(float offset)
     {
-        Vector2 moveOffset = moveDirection * offset;
+        Vector2 moveOffset = m_MoveDirection * offset;
         transform.position += new Vector3(moveOffset.x, moveOffset.y);
     }
 
@@ -131,7 +183,7 @@ public class Snake : MonoBehaviour
         m_BodyDestinationList[0] = destination;
         
         destination += nextDirection;
-        moveDirection = nextDirection;
+        m_MoveDirection = nextDirection;
     }
 
     private void GetInput()
@@ -146,26 +198,17 @@ public class Snake : MonoBehaviour
 
             if (newDirection.Equals(Vector2.zero)) return;
 
-            if ((newDirection.x == 0) ^ (moveDirection.x == 0))
+            if ((newDirection.x == 0) ^ (m_MoveDirection.x == 0))
             {
                 m_ChangeReceived = true;
                 Vector2 turnPos = new();
                 Vector3 headPosition = transform.position;
-                if (moveDirection.x < 0) turnPos = new Vector2(FindLastPoint5(headPosition.x), headPosition.y);
-                else if (moveDirection.x > 0) turnPos = new Vector2(FindNextPoint5(headPosition.x), headPosition.y);
-                else if (moveDirection.y < 0) turnPos = new Vector2(headPosition.x, FindLastPoint5(headPosition.y));
-                else if (moveDirection.y > 0) turnPos = new Vector2(headPosition.x, FindNextPoint5(headPosition.y));
+                if (m_MoveDirection.x < 0) turnPos = new Vector2(FindLastPoint5(headPosition.x), headPosition.y);
+                else if (m_MoveDirection.x > 0) turnPos = new Vector2(FindNextPoint5(headPosition.x), headPosition.y);
+                else if (m_MoveDirection.y < 0) turnPos = new Vector2(headPosition.x, FindLastPoint5(headPosition.y));
+                else if (m_MoveDirection.y > 0) turnPos = new Vector2(headPosition.x, FindNextPoint5(headPosition.y));
 
                 nextDirection = newDirection;
-                
-                // TurnPosAndDir turn = new(turnPos, newDirection);
-
-                // m_TurnList.Add(turn);
-                // m_HeadNextTurn = turn;
-                
-                // for (int i = 0; i < m_BodyTurnList.Count; i++) m_BodyTurnList[i].Add(turn);
-                
-                // Debug.Log("Add turn:" + m_HeadNextTurn);
             }
         }
     }
@@ -212,5 +255,7 @@ public class Snake : MonoBehaviour
     private void Die()
     {
         Time.timeScale = 0;
+        scoreTMP.text = (m_BodyList.Count - 3).ToString();
+        dieMenu.SetActive(true);
     }
 }
