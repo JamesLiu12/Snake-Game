@@ -225,7 +225,7 @@ public class Snake : MonoBehaviour
             Destroy(col.gameObject);
             Grow();
         }
-        else if (col.CompareTag("Obstacle"))
+        else if (col.CompareTag("Obstacle") || (col.CompareTag("SnakeBody") && col.gameObject != m_BodyList[0].gameObject))
         {
             Die();
         }

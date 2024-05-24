@@ -7,6 +7,8 @@ TagManager:
   - Snake
   - Food
   - Obstacle
+  - SnakeHead
+  - SnakeBody
   layers:
   - Default
   - TransparentFX
