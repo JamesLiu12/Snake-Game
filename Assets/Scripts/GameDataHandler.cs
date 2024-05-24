@@ -15,22 +15,21 @@ public class GameDataHandler : MonoBehaviour
         
     }
 
-    void UploadData()
+    public void UploadData()
     {
         string playerName = playerNameInput.text;
 
-        List<Dictionary<string, string>> foodTimes = new();
+        List<FoodTime> foodTimes = new List<FoodTime>();
         foreach (var foodTime in snakeScript.foodTimeList)
         {
-            Dictionary<string, string> entry = new Dictionary<string, string>
-            {
-                { "foodName", foodTime.Item1 },
-                { "takeTime", foodTime.Item2.ToString() }
-            };
-            foodTimes.Add(entry);
+            foodTimes.Add(new FoodTime { foodName = foodTime.Item1, takeTime = foodTime.Item2.ToString() });
         }
 
-        string foodTimesJson = JsonUtility.ToJson(new SerializationWrapper(foodTimes));
+        FoodTimeListWrapper foodTimesWrapper = new FoodTimeListWrapper { foodTimes = foodTimes };
+        string foodTimesJson = JsonUtility.ToJson(foodTimesWrapper);
+        
+        Debug.Log(foodTimes.Count);
+        Debug.Log(foodTimesJson);
 
         StartCoroutine(PostData(playerName, foodTimesJson));
     }
@@ -41,20 +40,22 @@ public class GameDataHandler : MonoBehaviour
         form.AddField("playerName", playerName);
         form.AddField("foodTimes", foodTimesJson);
 
-        using UnityWebRequest www = UnityWebRequest.Post("http://localhost/uploadData.php", form);
+        using UnityWebRequest www = UnityWebRequest.Post("http://localhost/Snake/uploadData.php", form);
         yield return www.SendWebRequest();
 
         Debug.Log(www.result != UnityWebRequest.Result.Success ? www.error : www.downloadHandler.text);
     }
 
     [Serializable]
-    private class SerializationWrapper
+    private class FoodTime
     {
-        public List<Dictionary<string, string>> items;
+        public string foodName;
+        public string takeTime;
+    }
 
-        public SerializationWrapper(List<Dictionary<string, string>> items)
-        {
-            this.items = items;
-        }
+    [Serializable]
+    private class FoodTimeListWrapper
+    {
+        public List<FoodTime> foodTimes;
     }
 }
