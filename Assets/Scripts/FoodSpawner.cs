@@ -1,14 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class FoodSpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject food; 
+    [SerializeField] private List<GameObject> foodList;
         
-    [SerializeField] private int maxFoodCount = 5;
+    [SerializeField] private int maxFoodCount = 10;
 
-    [SerializeField] private float spawnTimeGap = 5;
+    [SerializeField] private float spawnTimeGap = 3;
     
 
     [SerializeField] private int minX = 1;
@@ -38,6 +39,6 @@ public class FoodSpawner : MonoBehaviour
     private void SpawnFood()
     {
         Vector3 spawnPosition = new Vector3(Random.Range(minX, maxX) + 0.5f, Random.Range(minY, maxY) + 0.5f, 0);
-        Instantiate(food, spawnPosition, Quaternion.identity);
+        Instantiate(foodList[Random.Range(0, foodList.Count - 1)], spawnPosition, Quaternion.identity);
     }
 }
