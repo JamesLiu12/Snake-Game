@@ -33,6 +33,10 @@ public class Snake : MonoBehaviour
 
     [SerializeField] private FoodSpawner foodSpawnerScript;
 
+    [SerializeField] private TextContainer textContainer;
+
+    [SerializeField] private MenuManager menuManager;
+
     private float m_Timer;
 
     public readonly List<Tuple<string, TimeSpan>> foodTimeList = new();
@@ -57,6 +61,7 @@ public class Snake : MonoBehaviour
         foodSpawnerScript.Initialize();
         m_Timer = 0;
         foodTimeList.Clear();
+        textContainer.Clear();
     }
 
     private void ClearBodies()
@@ -265,8 +270,13 @@ public class Snake : MonoBehaviour
 
     private void Die()
     {
+        menuManager.GameEnd();
         Time.timeScale = 0;
         scoreTMP.text = (m_BodyList.Count - 3).ToString();
+        foreach (var item in foodTimeList)
+        {
+            textContainer.AddText(item.Item1 + " " + item.Item2.ToString().Substring(3, 8));
+        }
         dieMenu.SetActive(true);
     }
 }

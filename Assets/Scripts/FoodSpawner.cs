@@ -10,8 +10,6 @@ public class FoodSpawner : MonoBehaviour
 {
     [SerializeField] private List<GameObject> foodList;
 
-    [SerializeField] private List<TMP_Text> foodCountTextList;
-        
     [SerializeField] private int maxFoodCount = 10;
 
     [SerializeField] private float spawnTimeGap = 3;

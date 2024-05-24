@@ -6,7 +6,7 @@ public class MenuManager : MonoBehaviour
 {
     enum MenuStatus
     {
-        MainMenu, Pause, InPlay, Ranking
+        MainMenu, Pause, InPlay, Ranking, GameEnd, FoodTime
     }
 
     [SerializeField] private GameObject mainMenu;
@@ -21,6 +21,8 @@ public class MenuManager : MonoBehaviour
 
     [SerializeField] private GameObject successfulText;
 
+    [SerializeField] private GameObject foodTimePanel;
+
     private MenuStatus m_CurrentStatus = MenuStatus.MainMenu;
     
     void Start()
@@ -28,6 +30,7 @@ public class MenuManager : MonoBehaviour
         mainMenu.SetActive(true);
         pauseMenu.SetActive(false);
         dieMenu.SetActive(false);
+        foodTimePanel.SetActive(false);
     }
     
     void Update()
@@ -42,6 +45,9 @@ public class MenuManager : MonoBehaviour
                 break;
             case MenuStatus.Ranking:
                 if (Input.GetKeyDown(KeyCode.Escape)) CloseRanking();
+                break;
+            case MenuStatus.FoodTime:
+                if (Input.GetKeyDown(KeyCode.Escape)) CloseFoodTimePanel();
                 break;
         }
     }
@@ -110,5 +116,22 @@ public class MenuManager : MonoBehaviour
     {
         uploadButton.SetActive(false);
         successfulText.SetActive(true);
+    }
+
+    public void GameEnd()
+    {
+        m_CurrentStatus = MenuStatus.GameEnd;
+    }
+
+    public void OpenFoodTimePanel()
+    {
+        foodTimePanel.SetActive(true);
+        m_CurrentStatus = MenuStatus.FoodTime;
+    }
+
+    public void CloseFoodTimePanel()
+    {
+        foodTimePanel.SetActive(false);
+        m_CurrentStatus = MenuStatus.GameEnd;
     }
 }

@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class GameDataHandler : MonoBehaviour
 {
-    public InputField playerNameInput;
+    public TMP_InputField playerNameInput;
     public Snake snakeScript;
     void Start()
     {
