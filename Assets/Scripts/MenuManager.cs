@@ -22,6 +22,8 @@ public class MenuManager : MonoBehaviour
     
     [SerializeField] private GameDataHandler gameDataHandler;
 
+    [SerializeField] private FoodSpawner foodSpawner;
+
     [SerializeField] private GameObject uploadButton;
 
     [SerializeField] private GameObject successfulText;
@@ -135,6 +137,7 @@ public class MenuManager : MonoBehaviour
         pauseMenu.SetActive(false);
         dieMenu.SetActive(false);
         mainMenu.SetActive(true);
+        foodSpawner.GameEnd();
         Time.timeScale = 1;
         m_CurrentStatus = MenuStatus.MainMenu;
     }

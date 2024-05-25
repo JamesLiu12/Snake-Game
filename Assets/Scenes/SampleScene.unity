@@ -10611,6 +10611,7 @@ MonoBehaviour:
   dieMenu: {fileID: 477441343}
   snakeScript: {fileID: 932000969}
   gameDataHandler: {fileID: 997033419}
+  foodSpawner: {fileID: 997033418}
   uploadButton: {fileID: 825624014}
   successfulText: {fileID: 126663504}
   foodTimePanel: {fileID: 1607318761}

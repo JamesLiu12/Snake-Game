@@ -12,7 +12,7 @@ public class FoodSpawner : MonoBehaviour
 
     [SerializeField] private int maxFoodCount = 10;
 
-    [SerializeField] private float spawnTimeGap = 3;
+    [SerializeField] private float spawnTimeGap = 2;
     
     [SerializeField] private int minX = 1;
     [SerializeField] private int maxX = 49;
@@ -35,6 +35,12 @@ public class FoodSpawner : MonoBehaviour
     public void StartGame()
     {
         m_GameStarted = true;
+    }
+
+    public void GameEnd()
+    {
+        m_GameStarted = false;
+        Initialize();
     }
 
     void Start()

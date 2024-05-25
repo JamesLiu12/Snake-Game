@@ -271,6 +271,7 @@ public class Snake : MonoBehaviour
     private void Die()
     {
         menuManager.GameEnd();
+        foodSpawnerScript.GameEnd();
         Time.timeScale = 0;
         scoreTMP.text = (m_BodyList.Count - 3).ToString();
         foreach (var item in foodTimeList)
