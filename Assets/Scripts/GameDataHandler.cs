@@ -58,4 +58,63 @@ public class GameDataHandler : MonoBehaviour
     {
         public List<FoodTime> foodTimes;
     }
+
+    public void RetrieveRanking(List<Tuple<int, string, int>> playerScore,
+        Dictionary<int, List<Tuple<string, string>>> playerFoodTime)
+    {
+        StartCoroutine(GetPlayerData(playerScore, playerFoodTime));
+    }
+
+    IEnumerator GetPlayerData(List<Tuple<int, string, int>> playerScore,
+        Dictionary<int,List<Tuple<string, string>>> playerFoodTime)
+    {
+        UnityWebRequest www = UnityWebRequest.Get("http://localhost/Snake/query.php");
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(www.error);
+        }
+        else
+        {
+            string jsonResult = www.downloadHandler.text;
+            Debug.Log(jsonResult);
+            Wrapper<PlayerData> wrapper = JsonUtility.FromJson<Wrapper<PlayerData>>(jsonResult);
+
+            List<PlayerData> playerDataList = wrapper.data;
+
+            playerScore.Clear();
+            playerFoodTime.Clear();
+
+            HashSet<int> playerIDs = new();
+
+            foreach (var playerData in playerDataList)
+            {
+                if (!playerIDs.Contains(playerData.PlayerID))
+                {
+                    playerScore.Add(new Tuple<int, string, int>(playerData.PlayerID, playerData.PlayerName,
+                        playerData.Score));
+                    playerIDs.Add(playerData.PlayerID);
+                }
+                if (!playerFoodTime.ContainsKey(playerData.PlayerID)) playerFoodTime.Add(playerData.PlayerID, new());
+                playerFoodTime[playerData.PlayerID].Add(new Tuple<string, string>(playerData.FoodName, playerData.TakeTime));
+            }
+        }
+    }
+
+    [Serializable]
+    public class PlayerData
+    {
+        public int PlayerID;
+        public string PlayerName;
+        public int Score;
+        public string FoodName;
+        public string TakeTime;
+    }
+
+    [Serializable]
+    public class Wrapper<T>
+    {
+        public List<T> data;
+    }
 }

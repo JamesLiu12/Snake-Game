@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TextContainer : MonoBehaviour
 {
@@ -10,19 +12,14 @@ public class TextContainer : MonoBehaviour
     private RectTransform m_TextRectTransform;
 
     private float m_CurrentPosY;
-    
+
     void Start()
     {
         m_TextRectTransform = tmpText.gameObject.GetComponent<RectTransform>();
         m_CurrentPosY = - m_TextRectTransform.rect.height / 2;
-
-        Debug.Log(m_CurrentPosY);
         
-        AddText("asdasd");
-        AddText("asdasd");
-        AddText("asdasd");
-        AddText("asdasd");
-        AddText("asdasd");
+        Debug.Log(m_CurrentPosY);
+
     }
     
     void Update()
@@ -41,7 +38,7 @@ public class TextContainer : MonoBehaviour
         textRectTransform.anchorMax = new Vector2(0.5f, 1.0f);
         textRectTransform.pivot = new Vector2(0.5f, 1.0f);
         textRectTransform.anchoredPosition = anchoredPosition;
-        m_CurrentPosY -= m_TextRectTransform.rect.height;
+        m_CurrentPosY -= tmpText.gameObject.GetComponent<RectTransform>().rect.height;
         newText.GetComponent<TMP_Text>().text = text;
     }
 
@@ -51,6 +48,8 @@ public class TextContainer : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        m_CurrentPosY = - m_TextRectTransform.rect.height / 2;
+        Debug.Log(gameObject.transform.parent.gameObject);
+        Debug.Log(tmpText.gameObject.GetComponent<RectTransform>());
+        m_CurrentPosY = - tmpText.gameObject.GetComponent<RectTransform>().rect.height / 2;
     }
 }
