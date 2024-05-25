@@ -165,7 +165,7 @@ public class MenuManager : MonoBehaviour
 
         if (gameDataHandler.uploadSuccess == 1)
         {
-            successfulText.SetActive(false);
+            successfulText.SetActive(true);
         }
         else
         {
