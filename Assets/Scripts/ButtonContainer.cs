@@ -25,7 +25,6 @@ public class ButtonContainer : MonoBehaviour
 
     void Start()
     {
-        Debug.Log(m_CurrentPosY);
 
     }
     

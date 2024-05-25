@@ -17,8 +17,6 @@ public class TextContainer : MonoBehaviour
     {
         m_TextRectTransform = tmpText.gameObject.GetComponent<RectTransform>();
         m_CurrentPosY = - m_TextRectTransform.rect.height / 2;
-        
-        Debug.Log(m_CurrentPosY);
 
     }
     
@@ -48,8 +46,6 @@ public class TextContainer : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        Debug.Log(gameObject.transform.parent.gameObject);
-        Debug.Log(tmpText.gameObject.GetComponent<RectTransform>());
         m_CurrentPosY = - tmpText.gameObject.GetComponent<RectTransform>().rect.height / 2;
     }
 }

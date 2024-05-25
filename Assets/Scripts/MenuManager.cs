@@ -141,8 +141,6 @@ public class MenuManager : MonoBehaviour
 
     public void CloseRanking()
     {
-        Debug.Log("close ranking");
-
         rankingPanel.SetActive(false);
         m_CurrentStatus = MenuStatus.MainMenu;
     }
@@ -150,7 +148,31 @@ public class MenuManager : MonoBehaviour
     public void UploadScore()
     {
         uploadButton.SetActive(false);
-        successfulText.SetActive(true);
+
+        StartCoroutine(WaitForUpload());
+    }
+
+    IEnumerator WaitForUpload()
+    {
+        float timeout = 3f;
+        float timer = 0f;
+
+        while (timer < timeout && gameDataHandler.uploadSuccess != 1 && gameDataHandler.uploadSuccess != 0)
+        {
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        if (gameDataHandler.uploadSuccess == 1)
+        {
+            successfulText.SetActive(false);
+        }
+        else
+        {
+            uploadButton.SetActive(true);
+        }
+
+        gameDataHandler.uploadSuccess = 2;
     }
 
     public void GameEnd()

@@ -10,6 +10,7 @@ public class GameDataHandler : MonoBehaviour
 {
     public TMP_InputField playerNameInput;
     public Snake snakeScript;
+    public int uploadSuccess = 2;
     void Start()
     {
         
@@ -27,9 +28,6 @@ public class GameDataHandler : MonoBehaviour
 
         FoodTimeListWrapper foodTimesWrapper = new FoodTimeListWrapper { foodTimes = foodTimes };
         string foodTimesJson = JsonUtility.ToJson(foodTimesWrapper);
-        
-        Debug.Log(foodTimes.Count);
-        Debug.Log(foodTimesJson);
 
         StartCoroutine(PostData(playerName, foodTimesJson));
     }
@@ -44,6 +42,8 @@ public class GameDataHandler : MonoBehaviour
         yield return www.SendWebRequest();
 
         Debug.Log(www.result != UnityWebRequest.Result.Success ? www.error : www.downloadHandler.text);
+
+        uploadSuccess = www.result == UnityWebRequest.Result.Success ? 1 : 0;
     }
 
     [Serializable]
@@ -78,7 +78,6 @@ public class GameDataHandler : MonoBehaviour
         else
         {
             string jsonResult = www.downloadHandler.text;
-            Debug.Log(jsonResult);
             Wrapper<PlayerData> wrapper = JsonUtility.FromJson<Wrapper<PlayerData>>(jsonResult);
 
             List<PlayerData> playerDataList = wrapper.data;
